@@ -1,0 +1,23 @@
+{
+  "name": "torrent-scraper",
+  "version": "1.0.0",
+  "description": "A little tool for scraping torrents in bulk, using RabbitMQ for task distribution.",
+  "main": "lib",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Sean Lang <slang800@gmail.com>",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "amqplib": "^0.4.2",
+    "argparse": "^1.0.7",
+    "binary-split": "^1.0.2",
+    "bluebird": "^3.4.1",
+    "node-fetch": "^1.6.0",
+    "pump": "^1.0.1",
+    "through2": "^2.0.1"
+  },
+  "devDependencies": {
+    "standard-format": "^2.2.3"
+  }
+}
