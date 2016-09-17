@@ -14,25 +14,11 @@ argparser = new ArgumentParser(
   description: packageInfo.description
 )
 argparser.addArgument(
-  ['--amqp-server']
-  defaultValue: 'localhost'
-  dest: 'amqpServer'
-  help: 'Address of the AMQP server, defaults to localhost.'
+  ['server']
+  help: 'Address of the AMQP server, for example: ' +
+  '"username:password@localhost".'
   type: 'string'
-)
-argparser.addArgument(
-  ['--username']
-  defaultValue: 'torrent-scraper'
-  dest: 'user'
-  help: 'RabbitMQ username, defaults to "torrent-scraper".'
-  type: 'string'
-)
-argparser.addArgument(
-  ['--password']
-  dest: 'pass'
-  help: 'RabbitMQ password.'
-  required: true
-  type: 'string'
+  metavar: "AMQP_SERVER"
 )
 
 argv = argparser.parseArgs()
@@ -51,8 +37,7 @@ class PublishStream extends Transform
       @ch.sendToQueue('torrents', line, persistent: true, cb)
 
 conn = undefined
-serverUrl = "amqp://#{argv.user}:#{argv.pass}@#{argv.amqpServer}"
-amqp.connect(serverUrl).then((connection) ->
+amqp.connect("amqp://#{argv.server}").then((connection) ->
   conn = connection
   conn.createConfirmChannel()
 ).then((ch) ->

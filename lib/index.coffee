@@ -16,31 +16,17 @@ argparser = new ArgumentParser(
   description: packageInfo.description
 )
 argparser.addArgument(
-  ['--amqp-server']
-  defaultValue: 'localhost'
-  dest: 'amqpServer'
-  help: 'Address of the AMQP server, defaults to localhost.'
-  type: 'string'
-)
-argparser.addArgument(
   ['--out']
   defaultValue: '/data'
   help: 'Download directory, defaults to "/data".'
   type: 'string'
 )
 argparser.addArgument(
-  ['--username']
-  defaultValue: 'torrent-scraper'
-  dest: 'user'
-  help: 'RabbitMQ username, defaults to "torrent-scraper".'
+  ['server']
+  help: 'Address of the AMQP server, for example: ' +
+  '"username:password@localhost".'
   type: 'string'
-)
-argparser.addArgument(
-  ['--password']
-  dest: 'pass'
-  help: 'RabbitMQ password.'
-  required: true
-  type: 'string'
+  metavar: "AMQP_SERVER"
 )
 
 argv = argparser.parseArgs()
@@ -113,9 +99,8 @@ queues = [
 ]
 queuesLength = queues.length
 i = 0
-serverUrl = "amqp://#{argv.user}:#{argv.pass}@#{argv.amqpServer}"
 
-amqp.connect(serverUrl).then((conn) ->
+amqp.connect("amqp://#{argv.server}").then((conn) ->
   conn.createChannel()
 ).then((ch) ->
   channel = ch
