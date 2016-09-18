@@ -22,6 +22,19 @@ argparser.addArgument(
   type: 'string'
 )
 argparser.addArgument(
+  ['--prefetch']
+  defaultValue: 20
+  help: 'How many hashes to fetch from AMQP and keep in memory waiting to' +
+  'download. Defaults to 20.'
+  type: 'int'
+)
+argparser.addArgument(
+  ['--concurrency']
+  defaultValue: 10
+  help: 'How many HTTP requests to make at once. Defaults to 10.'
+  type: 'int'
+)
+argparser.addArgument(
   ['server']
   help: 'Address of the AMQP server, for example: ' +
   '"username:password@localhost".'
@@ -87,21 +100,7 @@ makeQueue = ->
     )
   )
 
-queues = [
-  makeQueue()
-  makeQueue()
-  makeQueue()
-  makeQueue()
-  makeQueue()
-  makeQueue()
-  makeQueue()
-  makeQueue()
-  makeQueue()
-  makeQueue()
-  makeQueue()
-  makeQueue()
-]
-queuesLength = queues.length
+queues = (makeQueue() for i in [0...argv.concurrency])
 i = 0
 
 amqp.connect("amqp://#{argv.server}").then((conn) ->
@@ -117,10 +116,10 @@ amqp.connect("amqp://#{argv.server}").then((conn) ->
       durable: true,
       deadLetterExchange: 'torrents.dead.fanout'
     )
-    ch.prefetch(20)
+    ch.prefetch(argv.prefetch)
     ch.consume('torrents', (msg) ->
       i += 1
-      queues[i % queuesLength].write(msg)
+      queues[i % argv.concurrency].write(msg)
     )
   ])
 ).then(null, console.warn)
