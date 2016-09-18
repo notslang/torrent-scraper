@@ -56,15 +56,19 @@ channel = undefined
 makeQueue = ->
   map(objectMode: true, (msg, enc, cb) ->
     infoHash = msg.content.toString()
+    timeAdded = null
+    timeRetrieved = null
     fetch("http://itorrents.org/torrent/#{infoHash}.torrent").then(
       checkStatus
     ).then((res) ->
+      timeAdded = +(new Date(res.headers.get('last-modified'))) / 1000
+      timeRetrieved = Date.now() / 1000
       pump(
         res.body
         fs.createWriteStream("#{argv.out}/#{infoHash}.torrent")
       )
     ).then( ->
-      console.log 'got: ', infoHash
+      console.log 'got:', JSON.stringify({infoHash, timeAdded, timeRetrieved})
       channel.ack msg
       cb()
     ).catch((err) ->
