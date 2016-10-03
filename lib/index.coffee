@@ -86,7 +86,7 @@ makeQueue = ->
       cb()
     ).catch((err) ->
       if not err.response? and
-         err.code not in ['ETIMEDOUT', 'EAI_AGAIN', 'ECONNRESET']
+         err.code not in ['ETIMEDOUT', 'EAI_AGAIN', 'ECONNRESET', 'EHOSTUNREACH']
         console.error err
         process.exit(1)
       else if err.response.status is 404
