@@ -109,12 +109,21 @@ amqp.connect("amqp://#{argv.server}").then((conn) ->
   channel = ch
   BPromise.all([
     ch.assertExchange('torrents.dead.fanout', 'fanout', durable: true)
-    ch.assertQueue('torrents.dead', durable: true)
+    ch.assertExchange('torrents.fanout', 'fanout', durable: true)
+    ch.assertQueue(
+      'torrents.dead'
+      durable: true
+      messageTtl: 1000 * 60 * 60 * 24 * 7 # 1 week
+      deadLetterExchange: 'torrents.fanout'
+    )
     ch.bindQueue('torrents.dead', 'torrents.dead.fanout')
     ch.assertQueue(
-      'torrents',
-      durable: true,
+      'torrents'
+      durable: true
       deadLetterExchange: 'torrents.dead.fanout'
+    )
+    ch.bindQueue(
+      'torrents', 'torrents.fanout'
     )
     ch.prefetch(argv.prefetch)
     ch.consume('torrents', (msg) ->

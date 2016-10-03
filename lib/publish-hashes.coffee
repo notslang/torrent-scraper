@@ -42,12 +42,21 @@ amqp.connect("amqp://#{argv.server}").then((connection) ->
   conn.createConfirmChannel()
 ).then((ch) ->
   ch.assertExchange('torrents.dead.fanout', 'fanout', durable: true)
-  ch.assertQueue('torrents.dead', durable: true)
+  ch.assertExchange('torrents.fanout', 'fanout', durable: true)
+  ch.assertQueue(
+    'torrents.dead'
+    durable: true
+    messageTtl: 1000 * 60 * 60 * 24 * 7 # 1 week
+    deadLetterExchange: 'torrents.fanout'
+  )
   ch.bindQueue('torrents.dead', 'torrents.dead.fanout')
   ch.assertQueue(
     'torrents'
     durable: true
     deadLetterExchange: 'torrents.dead.fanout'
+  )
+  ch.bindQueue(
+    'torrents', 'torrents.fanout'
   ).then( ->
     pump(
       process.stdin
