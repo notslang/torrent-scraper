@@ -89,7 +89,7 @@ makeQueue = ->
          err.code not in ['ETIMEDOUT', 'EAI_AGAIN', 'ECONNRESET', 'EHOSTUNREACH']
         console.error err
         process.exit(1)
-      else if err.response.status is 404
+      else if err.response?.status is 404
         console.log 'err 404 (no retry):', infoHash
         channel.nack(msg, false, false)
         cb()
