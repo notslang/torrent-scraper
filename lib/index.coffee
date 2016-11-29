@@ -44,14 +44,17 @@ argparser.addArgument(
 
 argv = argparser.parseArgs()
 
-FAKE_404_URL = 'http://itorrents.org/404.php?reason=&title='
+FAKE_404_URLS = [
+  'http://itorrents.org/404.php?reason=&title='
+  'https://www.limetorrents.cc/'
+]
 
 checkStatus = (response) ->
   if response.status >= 200 and response.status < 300 and
-     response.url isnt FAKE_404_URL
+     response.url not in FAKE_404_URLS
     return response
   else
-    if response.url is FAKE_404_URL
+    if response.url in FAKE_404_URLS
       # fake 404 :(
       error = new Error("Not Found")
       error.response =
