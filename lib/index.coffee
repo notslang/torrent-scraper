@@ -74,7 +74,11 @@ makeQueue = ->
     infoHash = msg.content.toString()
     timeAdded = null
     timeRetrieved = null
-    fetch("http://itorrents.org/torrent/#{infoHash}.torrent").then(
+    BPromise.resolve(
+      fetch("http://itorrents.org/torrent/#{infoHash}.torrent")
+    ).timeout(
+      30000
+    ).then(
       checkStatus
     ).then((res) ->
       timeAdded = +(new Date(res.headers.get('last-modified'))) / 1000
