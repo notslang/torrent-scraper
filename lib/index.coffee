@@ -88,7 +88,12 @@ makeQueue = ->
         fs.createWriteStream("#{argv.out}/#{infoHash}.torrent")
       )
     ).then( ->
-      console.log 'got:', JSON.stringify({infoHash, timeAdded, timeRetrieved})
+      console.log JSON.stringify({
+        infoHash
+        result: 'success'
+        timeAdded
+        timeRetrieved
+      })
       channel.ack msg
       cb()
     ).catch((err) ->
@@ -97,11 +102,19 @@ makeQueue = ->
         console.error err
         process.exit(1)
       else if err.response?.status is 404
-        console.log 'err 404 (no retry):', infoHash
+        console.log JSON.stringify({
+          infoHash
+          result: '404-no-retry'
+        })
         channel.nack(msg, false, false)
         cb()
       else
-        console.log 'err (retrying):', infoHash, err
+        console.log JSON.stringify({
+          infoHash
+          result: 'retry'
+          errorCode: err.code
+        })
+        console.error err
         channel.nack(msg)
         cb()
     )
