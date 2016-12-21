@@ -23,15 +23,15 @@ argparser.addArgument(
 )
 argparser.addArgument(
   ['--prefetch']
-  defaultValue: 20
+  defaultValue: 100
   help: 'How many hashes to fetch from AMQP and keep in memory waiting to' +
-  'download. Defaults to 20.'
+  'download. Defaults to 100.'
   type: 'int'
 )
 argparser.addArgument(
   ['--concurrency']
-  defaultValue: 10
-  help: 'How many HTTP requests to make at once. Defaults to 10.'
+  defaultValue: 12
+  help: 'How many HTTP requests to make at once. Defaults to 12.'
   type: 'int'
 )
 argparser.addArgument(
