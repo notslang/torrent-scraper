@@ -10,9 +10,10 @@ build/package.json: package.json
 	if [ -d build/node_modules ]; then rm -R build/node_modules; fi
 	npm install --prefix build --production
 
-app: build/package.json \
+image.tar: build/package.json \
      $(patsubst lib/%.coffee, build/lib/%.js, $(wildcard lib/*.coffee))
-	sudo docker build ./
+	sudo docker build --tag=torrent-scraper-build ./
+	sudo docker save torrent-scraper-build > "$@"
 
 clean:
 	rm -rf build
