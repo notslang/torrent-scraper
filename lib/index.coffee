@@ -48,6 +48,7 @@ FAKE_404_URLS = [
   'http://itorrents.org/404.php?reason=&title='
   'https://www.limetorrents.cc/'
 ]
+SOFT_NETWORK_ISSUES = ['ETIMEDOUT', 'EAI_AGAIN', 'ECONNRESET', 'EHOSTUNREACH']
 
 checkStatus = (response) ->
   if response.status >= 200 and response.status < 300 and
@@ -75,7 +76,7 @@ makeQueue = ->
     timeAdded = null
     timeRetrieved = null
     BPromise.resolve(
-      fetch("http://itorrents.org/torrent/#{infoHash}.torrent")
+      fetch("http://itorrents.org/torrent/#{infoHash}.torrent", redirect: 'error')
     ).timeout(
       30000
     ).then(
@@ -97,22 +98,26 @@ makeQueue = ->
       channel.ack msg
       cb()
     ).catch((err) ->
-      if not err.response? and
-         err.code not in ['ETIMEDOUT', 'EAI_AGAIN', 'ECONNRESET', 'EHOSTUNREACH']
-        console.error err
-        process.exit(1)
-      else if err.response?.status is 404
+      if (err.name is 'FetchError' and err.type is 'no-redirect') or
+         err.response?.status is 404
         console.log JSON.stringify({
           infoHash
           result: '404-no-retry'
         })
         channel.nack(msg, false, false)
         cb()
+      else if not err.response? and err.code not in SOFT_NETWORK_ISSUES and
+              err not instanceof BPromise.TimeoutError
+        console.error err
+        process.exit(1)
       else
+        errorCode = (
+          if err instanceof BPromise.TimeoutError then 'TIMEOUT' else err.code
+        )
         console.log JSON.stringify({
           infoHash
           result: 'retry'
-          errorCode: err.code
+          errorCode
         })
         console.error err
         channel.nack(msg)
