@@ -1,3 +1,4 @@
+BPromise = require 'bluebird'
 Transform = require 'concurrent-transform-stream'
 amqp = require 'amqplib'
 pump = require 'pump'
@@ -38,31 +39,35 @@ class PublishStream extends Transform
       @ch.sendToQueue(QUEUE_NAME, new Buffer(hash, 'hex'), persistent: true, cb)
 
 conn = undefined
+channel = undefined
 amqp.connect("amqp://#{argv.server}").then((connection) ->
   conn = connection
   conn.createConfirmChannel()
 ).then((ch) ->
-  ch.assertExchange("#{QUEUE_NAME}.dead.fanout", 'fanout', durable: true)
-  ch.assertExchange("#{QUEUE_NAME}.fanout", 'fanout', durable: true)
-  ch.assertQueue(
-    "#{QUEUE_NAME}.dead"
-    durable: true
-    deadLetterExchange: "#{QUEUE_NAME}.fanout"
-  )
-  ch.bindQueue("#{QUEUE_NAME}.dead", "#{QUEUE_NAME}.dead.fanout")
-  ch.assertQueue(
-    QUEUE_NAME
-    durable: true
-    deadLetterExchange: "#{QUEUE_NAME}.dead.fanout"
-  )
-  ch.bindQueue(QUEUE_NAME, "#{QUEUE_NAME}.fanout").then( ->
-    pump(
-      process.stdin
-      split()
-      (new PublishStream(ch))
-      (err) ->
-        if err? then console.error(err)
-        conn.close()
+  channel = ch
+  BPromise.all([
+    ch.assertExchange("#{QUEUE_NAME}.dead.fanout", 'fanout', durable: true)
+    ch.assertExchange("#{QUEUE_NAME}.fanout", 'fanout', durable: true)
+    ch.assertQueue(
+      "#{QUEUE_NAME}.dead"
+      durable: true
+      deadLetterExchange: "#{QUEUE_NAME}.fanout"
     )
+    ch.bindQueue("#{QUEUE_NAME}.dead", "#{QUEUE_NAME}.dead.fanout")
+    ch.assertQueue(
+      QUEUE_NAME
+      durable: true
+      deadLetterExchange: "#{QUEUE_NAME}.dead.fanout"
+    )
+    ch.bindQueue(QUEUE_NAME, "#{QUEUE_NAME}.fanout")
+  ])
+).then( ->
+  pump(
+    process.stdin
+    split()
+    (new PublishStream(channel))
+    (err) ->
+      if err? then console.error(err)
+      conn.close()
   )
 ).then(null, console.warn)
