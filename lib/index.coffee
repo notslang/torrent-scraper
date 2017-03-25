@@ -57,10 +57,10 @@ checkStatus = (response) ->
   else
     if response.url in FAKE_404_URLS
       # fake 404 :(
-      error = new Error("Not Found")
+      error = new Error('Not Found')
       error.response =
         status: 404
-        statusText: "Not Found"
+        statusText: 'Not Found'
     else
       error = new Error(response.statusText)
       error.response = response
