@@ -7,6 +7,7 @@ split = require 'binary-split'
 packageInfo = require '../package'
 
 HASH_RE = /[A-Z0-9]{40}/
+QUEUE_NAME = 'itorrents.org-scraper'
 
 argparser = new ArgumentParser(
   version: packageInfo.version
@@ -34,29 +35,27 @@ class PublishStream extends Transform
       cb()
     else
       process.stdout.write('.')
-      @ch.sendToQueue('torrents', new Buffer(hash, 'hex'), persistent: true, cb)
+      @ch.sendToQueue(QUEUE_NAME, new Buffer(hash, 'hex'), persistent: true, cb)
 
 conn = undefined
 amqp.connect("amqp://#{argv.server}").then((connection) ->
   conn = connection
   conn.createConfirmChannel()
 ).then((ch) ->
-  ch.assertExchange('torrents.dead.fanout', 'fanout', durable: true)
-  ch.assertExchange('torrents.fanout', 'fanout', durable: true)
+  ch.assertExchange("#{QUEUE_NAME}.dead.fanout", 'fanout', durable: true)
+  ch.assertExchange("#{QUEUE_NAME}.fanout", 'fanout', durable: true)
   ch.assertQueue(
-    'torrent.dead'
+    "#{QUEUE_NAME}.dead"
     durable: true
-    deadLetterExchange: 'torrents.fanout'
+    deadLetterExchange: "#{QUEUE_NAME}.fanout"
   )
-  ch.bindQueue('torrent.dead', 'torrents.dead.fanout')
+  ch.bindQueue("#{QUEUE_NAME}.dead", "#{QUEUE_NAME}.dead.fanout")
   ch.assertQueue(
-    'torrents'
+    QUEUE_NAME
     durable: true
-    deadLetterExchange: 'torrents.dead.fanout'
+    deadLetterExchange: "#{QUEUE_NAME}.dead.fanout"
   )
-  ch.bindQueue(
-    'torrents', 'torrents.fanout'
-  ).then( ->
+  ch.bindQueue(QUEUE_NAME, "#{QUEUE_NAME}.fanout").then( ->
     pump(
       process.stdin
       split()

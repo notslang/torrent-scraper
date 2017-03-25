@@ -49,6 +49,7 @@ FAKE_404_URLS = [
   'https://www.limetorrents.cc/'
 ]
 SOFT_NETWORK_ISSUES = ['ETIMEDOUT', 'EAI_AGAIN', 'ECONNRESET', 'EHOSTUNREACH']
+QUEUE_NAME = 'itorrents.org-scraper'
 
 checkStatus = (response) ->
   if response.status >= 200 and response.status < 300 and
@@ -136,24 +137,22 @@ amqp.connect("amqp://#{argv.server}").then((conn) ->
 ).then((ch) ->
   channel = ch
   BPromise.all([
-    ch.assertExchange('torrents.dead.fanout', 'fanout', durable: true)
-    ch.assertExchange('torrents.fanout', 'fanout', durable: true)
+    ch.assertExchange("#{QUEUE_NAME}.dead.fanout", 'fanout', durable: true)
+    ch.assertExchange("#{QUEUE_NAME}.fanout", 'fanout', durable: true)
     ch.assertQueue(
-      'torrent.dead'
+      "#{QUEUE_NAME}.dead"
       durable: true
-      deadLetterExchange: 'torrents.fanout'
+      deadLetterExchange: "#{QUEUE_NAME}.fanout"
     )
-    ch.bindQueue('torrent.dead', 'torrents.dead.fanout')
+    ch.bindQueue("#{QUEUE_NAME}.dead", "#{QUEUE_NAME}.dead.fanout")
     ch.assertQueue(
-      'torrents'
+      QUEUE_NAME
       durable: true
-      deadLetterExchange: 'torrents.dead.fanout'
+      deadLetterExchange: "#{QUEUE_NAME}.dead.fanout"
     )
-    ch.bindQueue(
-      'torrents', 'torrents.fanout'
-    )
+    ch.bindQueue(QUEUE_NAME, "#{QUEUE_NAME}.fanout")
     ch.prefetch(argv.prefetch)
-    ch.consume('torrents', (msg) ->
+    ch.consume(QUEUE_NAME, (msg) ->
       i += 1
       queues[i % argv.concurrency].write(msg)
     )
