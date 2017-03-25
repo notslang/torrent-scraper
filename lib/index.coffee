@@ -138,7 +138,6 @@ amqp.connect("amqp://#{argv.server}").then((conn) ->
     ch.assertQueue(
       'torrent.dead'
       durable: true
-      messageTtl: 1000 * 60 * 60 * 24 * 30 # 1 month
       deadLetterExchange: 'torrents.fanout'
     )
     ch.bindQueue('torrent.dead', 'torrents.dead.fanout')
