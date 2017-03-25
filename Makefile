@@ -2,7 +2,10 @@
 
 build/lib/%.js: lib/%.coffee
 	mkdir -p build/lib
-	cat "$<" | ./node_modules/.bin/coffee -b -c -s | ./node_modules/.bin/standard-format - > "$@"
+	echo "'use_strict'" \
+	| cat - "$<" \
+	| ./node_modules/.bin/coffee -b -c -s \
+	| ./node_modules/.bin/standard-format - > "$@"
 
 build/package.json: package.json
 	mkdir -p build
