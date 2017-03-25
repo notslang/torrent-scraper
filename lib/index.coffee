@@ -73,7 +73,7 @@ channel = undefined
 
 makeQueue = ->
   map(objectMode: true, (msg, enc, cb) ->
-    infoHash = msg.content.toString('hex')
+    infoHash = msg.content.toString('hex').toUpperCase()
     timeAdded = null
     timeRetrieved = null
     BPromise.resolve(
