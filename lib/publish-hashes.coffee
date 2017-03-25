@@ -34,7 +34,7 @@ class PublishStream extends Transform
       cb()
     else
       process.stdout.write('.')
-      @ch.sendToQueue('torrents', line, persistent: true, cb)
+      @ch.sendToQueue('torrents', new Buffer(hash, 'hex'), persistent: true, cb)
 
 conn = undefined
 amqp.connect("amqp://#{argv.server}").then((connection) ->
