@@ -76,7 +76,10 @@ makeQueue = ->
     timeAdded = null
     timeRetrieved = null
     BPromise.resolve(
-      fetch("http://itorrents.org/torrent/#{infoHash}.torrent", redirect: 'error')
+      fetch(
+        "http://itorrents.org/torrent/#{infoHash}.torrent"
+        redirect: 'error'
+      )
     ).timeout(
       30000
     ).then(
